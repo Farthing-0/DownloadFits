@@ -60,9 +60,12 @@ if __name__ == "__main__":
     file_list = []
     with open(find_sh_files(dir), 'r') as f:
         file_list = read_file_list(f)
+    print('Downloading ' + str(len(file_list)) + ' files in total.')
     if(file_list[0].endswith('s_lc.fits')):
+        print('File type is lc.')
         print('Searching lc file size...')
         remote_size = int(requests.head(url_prefix + file_list[0]).headers['content-length'])
         download_multi_files(file_list,'lc',remote_size)
     elif(file_list[0].endswith('dvt.fits')):
+        print('File type is dvt.')
         download_multi_files(file_list,'dvt')
