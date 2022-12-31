@@ -2,11 +2,13 @@ import os
 import wget
 import requests
 import time
+import argparse
 
 def find_sh_files(dir,verify = False):
     for file in os.listdir(dir):
         if file.endswith(".sh") and file.startswith("tess"):
             return dir + file
+    return None 
 
 def read_file_list(file):
     file_list = []
@@ -55,11 +57,54 @@ def download_multi_files(file_list,file_type,file_size = 0):
             future.result()
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser('A little script to download TESS data. You can specify the type and sn of the sector to download. Or you can just run this script in the directory where the download script is located.')
+    parser.add_argument('-t', '--type', help='Type of the file to download, lc or dvt.',)
+    parser.add_argument('-n', '--sn', help='sn of the sector to download.',)
+    args = parser.parse_args()
+    if(args.type == None and args.sn != None):
+        print('Please specify the type of the file to download.')
+        exit()
+    elif(args.type != None and args.sn == None):
+        print('Please specify the sn of the sector to download.')
+        exit()
+    elif(args.type != 'lc' and args.type != 'dvt' and args.type != None):
+        print('File type must be lc or dvt.')
+        exit()
+    if(args.sn != None):
+        try:
+            int(args.sn)
+        except TypeError :
+            print('sn must be an integer.')
+            exit()
+        except ValueError :
+            print('sn must be an integer.')
+            exit()
     dir = './'
+    script_prefix = 'https://archive.stsci.edu/missions/tess/download_scripts/sector/'
     url_prefix = 'https://mast.stsci.edu/api/v0.1/Download/file/?uri=mast:TESS/product/'
-    file_list = []
-    with open(find_sh_files(dir), 'r') as f:
-        file_list = read_file_list(f)
+    
+    dir_file_list = os.listdir(dir)
+    if(len(dir_file_list) != 1 and args.type != None and args.sn != None):
+        print('Specify download must be in empty directory except this file.')
+        exit()
+    elif(len(dir_file_list) == 1 and args.type == None and args.sn == None):
+        print('Please specify the type and sn of the sector to download.')
+        exit()
+    if(args.type == 'lc'):
+        wget.download(script_prefix + 'tesscurl_sector_' + args.sn + '_lc.sh', out='tesscurl_sector_' + args.sn + '_lc.sh')
+        # time.sleep(0.5)
+    elif(args.type == 'dvt'):
+        # https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_55_dv.sh
+        wget.download(script_prefix + 'tesscurl_sector_' + args.sn + '_dv.sh', out='tesscurl_sector_' + args.sn + '_dvt.sh')
+        # time.sleep(0.5)
+    
+    sh_file = find_sh_files(dir)
+    if(sh_file == None ):
+        print('Finding sh file error.')
+        exit()
+
+    with open(sh_file, 'r') as f:
+        file_list = read_file_list(f)    
     print('Downloading ' + str(len(file_list)) + ' files in total.')
     if(file_list[0].endswith('s_lc.fits')):
         print('File type is lc.')
