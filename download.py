@@ -48,6 +48,18 @@ def download_file(file_name,file_type,file_size = 0):
         else:
             print('Downloading ' + file_name)
             wget.download(url_prefix + file_name, out=file_name)
+    elif(file_type == 'ffi'):
+        if(os.path.isfile(file_name)):
+            size = os.path.getsize(file_name)
+            if size < file_size:
+                os.remove(file_name)
+                print('File is not complete, downloading ' + file_name)
+                wget.download(url_prefix + file_name, out=file_name)
+            else:
+                print('Skip ' + file_name)
+        else:
+            print('Downloading ' + file_name)
+            wget.download(url_prefix + file_name, out=file_name)
 
 def download_multi_files(file_list,file_type,file_size = 0):
     import concurrent.futures
@@ -58,7 +70,7 @@ def download_multi_files(file_list,file_type,file_size = 0):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser('A little script to download TESS data. You can specify the type and sn of the sector to download. Or you can just run this script in the directory where the download script is located.')
-    parser.add_argument('-t', '--type', help='Type of the file to download, lc or dvt.',)
+    parser.add_argument('-t', '--type', help='Type of the file to download, lc, dvt or ffi.',)
     parser.add_argument('-n', '--sn', help='sn of the sector to download.',)
     args = parser.parse_args()
     if(args.type == None and args.sn != None):
@@ -97,6 +109,9 @@ if __name__ == "__main__":
         # https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_55_dv.sh
         wget.download(script_prefix + 'tesscurl_sector_' + args.sn + '_dv.sh', out='tesscurl_sector_' + args.sn + '_dvt.sh')
         # time.sleep(0.5)
+    elif(args.type == 'ffi'):
+        # https://archive.stsci.edu/missions/tess/download_scripts/sector/tesscurl_sector_68_ffic.sh
+        wget.download(script_prefix + 'tesscurl_sector_' + args.sn + '_ffic.sh', out='tesscurl_sector_' + args.sn + '_ffic.sh')
     
     sh_file = find_sh_files(dir)
     if(sh_file == None ):
@@ -114,3 +129,8 @@ if __name__ == "__main__":
     elif(file_list[0].endswith('dvt.fits')):
         print('File type is dvt.')
         download_multi_files(file_list,'dvt')
+    elif(file_list[0].endswith('ffic.fits')):
+        print('File type is ffi.')
+        print('Searching ffi file size...')
+        remote_size = int(requests.head(url_prefix + file_list[0]).headers['content-length'])
+        download_multi_files(file_list,'ffi',remote_size)
