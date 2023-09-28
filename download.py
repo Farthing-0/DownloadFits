@@ -79,8 +79,8 @@ if __name__ == "__main__":
     elif(args.type != None and args.sn == None):
         print('Please specify the sn of the sector to download.')
         exit()
-    elif(args.type != 'lc' and args.type != 'dvt' and args.type != None):
-        print('File type must be lc or dvt.')
+    elif(args.type != 'lc' and args.type != 'dvt' and args.type != 'ffi' and args.type != None):
+        print('File type must be lc, dvt, or ffi.')
         exit()
     if(args.sn != None):
         try:
